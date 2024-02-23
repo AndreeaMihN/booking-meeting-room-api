@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const roomSchema = mongoose.Schema({
-    name: String,
+const userSchema = mongoose.Schema({
+  name: String,
 });
 
-exports.Room = mongoose.model('User', roomSchema);
+exports.User = mongoose.model("User", userSchema);

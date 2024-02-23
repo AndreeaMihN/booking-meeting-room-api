@@ -13,11 +13,17 @@ app.use(express.json());
 app.use(morgan('tiny'));
 
 //Routes
-const roomRouter = require('./routes/room')
+const officesRouter = require('./routes/offices');
+const roomsRouter = require('./routes/rooms');
+const usersRouter = require('./routes/users');
+const bookingsRouter = require('./routes/bookings');
 
 const api = process.env.API_URL;
 
-app.use(`${api}/rooms`, roomRouter);
+app.use(`${api}/rooms`, roomsRouter);
+app.use(`${api}/users`, usersRouter);
+app.use(`${api}/offices`, officesRouter);
+app.use(`${api}/bookings`, bookingsRouter);
 
 //Database
 mongoose.connect(process.env.CONNECTION_STRING)
