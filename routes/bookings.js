@@ -149,8 +149,6 @@ router.get("/:roomId/:day", async (req, res) => {
     const roomId = req.params.roomId;
     const booking = await Booking.findOne({ roomId, day });
     if (!booking) {
-      console.log("here");
-      console.log("booking", booking);
       return res.send(["Morning", "Afternoon", "All-day"]);
     }
 
@@ -161,7 +159,7 @@ router.get("/:roomId/:day", async (req, res) => {
     if (!booking.afternoonBooked) {
       falseSlots.push("Afternoon");
     }
-    if (!booking.allDayBooked) {
+    if (!booking.allDayBooked && !booking.afternoonBooked && !booking.morningBooked) {
       falseSlots.push("All-day");
     }
 
