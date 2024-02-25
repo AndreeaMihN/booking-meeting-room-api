@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const roomSchema = mongoose.Schema({
   name: {
@@ -17,10 +17,14 @@ const roomSchema = mongoose.Schema({
   },
   office: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Office',
+    ref: "Office",
+    required: true,
+  },
+  imageUrl: {
+    type: String,
     required: true,
   },
   floor: Number,
 });
 
-exports.Room = mongoose.model('Room', roomSchema);
+exports.Room = mongoose.model("Room", roomSchema);

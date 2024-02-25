@@ -30,6 +30,7 @@ router.post(`/`, async (req, res) => {
         description: req.body.description, 
         capacity: req.body.capacity,
         office: req.body.office,
+        imageUrl: req.body.imageUrl,
         floor: req.body.floor,
     })
     room = await room.save();
@@ -53,6 +54,7 @@ router.put('/:id', async (req, res) => {
             description: req.body.description, 
             capacity: req.body.capacity,
             office: req.body.office,
+            imageUrl: req.body.imageUrl,
             floor: req.body.floor
         },
         {
@@ -73,33 +75,5 @@ router.delete('/:id', async (req, res) => {
       res.status(500).json({ success: false, error: 'Internal server error' });
     })
   });
-  
-//   router.get('/available-rooms', async (req, res) => {
-//     const { start, end } = req.query;
-
-//     if (!start || !end) {
-//         return res.status(400).json({ success: false, message: 'Start and end parameters are required for the interval' });
-//     }
-
-//     try {
-//         const availableRooms = await Room.find({
-//             bookedSlots: {
-//                 $not: {
-//                     $elemMatch: {
-//                         $or: [
-//                             { $gte: new Date(start), $lt: new Date(end) },
-//                             { $lt: new Date(start), $gte: new Date(end) }
-//                         ]
-//                     }
-//                 }
-//             }
-//         }).populate('office');
-
-//         res.status(200).json({ success: true, availableRooms });
-//     } catch (error) {
-//         console.error('Error while fetching available rooms:', error);
-//         res.status(500).json({ success: false, error: 'Internal server error. Failed to fetch available rooms.' });
-//     }
-// });
-
+ 
 module.exports = router;
