@@ -12,7 +12,7 @@ router.get(`/`, async (req, res) => {
   res.status(200).send(bookingList);
 });
 
-router.post(`/morning`, async (req, res) => {
+router.post(`/`, async (req, res) => {
   const room = await Room.findById(req.body.roomId);
   if (!room) return res.status(400).send("Invalid Room");
 
@@ -20,52 +20,13 @@ router.post(`/morning`, async (req, res) => {
     return res.status(400).send("Please provide a valid booking day");
   }
 
-  if (req.body.morningBooked === undefined) {
-    return res.status(400).send("Please provide a valid booking morningBooked");
-  }
-
   let existingBooking = await Booking.findOne({ roomId: req.body.roomId });
 
   if (existingBooking) {
+    console.log(existingBooking)
     existingBooking.morningBooked = req.body.morningBooked;
-    existingBooking.allDayBooked =
-      existingBooking.morningBooked && existingBooking.afternoonBooked;
-    existingBooking = await existingBooking.save();
-    return res.send(existingBooking);
-  }
-
-  let booking = new Booking({
-    roomId: req.body.roomId,
-    day: req.body.day,
-    morningBooked: req.body.morningBooked,
-  });
-
-  booking = await booking.save();
-  if (!booking) return res.status(500).send("The booking cannot be created!");
-
-  return res.send(booking);
-});
-
-router.post(`/afternoon`, async (req, res) => {
-  const room = await Room.findById(req.body.roomId);
-  if (!room) return res.status(400).send("Invalid Room");
-
-  if (!req.body.day) {
-    return res.status(400).send("Please provide a valid booking day");
-  }
-
-  if (req.body.afternoonBooked === undefined) {
-    return res
-      .status(400)
-      .send("Please provide a valid booking afternoonBooked");
-  }
-
-  let existingBooking = await Booking.findOne({ roomId: req.body.roomId });
-
-  if (existingBooking) {
     existingBooking.afternoonBooked = req.body.afternoonBooked;
-    existingBooking.allDayBooked =
-      existingBooking.morningBooked && existingBooking.afternoonBooked;
+    existingBooking.allDayBooked = req.body.morningBooked || req.body.afternoonBooked || req.body.allDayBooked;
     existingBooking = await existingBooking.save();
     return res.send(existingBooking);
   }
@@ -74,42 +35,8 @@ router.post(`/afternoon`, async (req, res) => {
     roomId: req.body.roomId,
     day: req.body.day,
     morningBooked: req.body.morningBooked,
-  });
-
-  booking = await booking.save();
-  if (!booking) return res.status(500).send("The booking cannot be created!");
-
-  return res.send(booking);
-});
-
-router.post(`/allday`, async (req, res) => {
-  const room = await Room.findById(req.body.roomId);
-  if (!room) return res.status(400).send("Invalid Room");
-
-  if (!req.body.day) {
-    return res.status(400).send("Please provide a valid booking day");
-  }
-
-  if (req.body.allDayBooked === undefined) {
-    return res.status(400).send("Please provide a valid booking allDayBooked");
-  }
-
-  let existingBooking = await Booking.findOne({ roomId: req.body.roomId });
-
-  if (existingBooking) {
-    existingBooking.allDayBooked = req.body.allDayBooked;
-    if (req.body.allDayBooked) {
-      existingBooking.morningBooked = true;
-      existingBooking.afternoonBooked = true;
-    }
-    existingBooking = await existingBooking.save();
-    return res.send(existingBooking);
-  }
-
-  let booking = new Booking({
-    roomId: req.body.roomId,
-    day: req.body.day,
-    morningBooked: req.body.morningBooked,
+    afternoonBooked: req.body.afternoonBooked,
+    allDayBooked: !req.body.morningBooked || !req.body.morningBooked,
   });
 
   booking = await booking.save();
@@ -144,30 +71,31 @@ router.put("/:id", async (req, res) => {
 });
 
 router.get("/:roomId/:day", async (req, res) => {
-  try {
-    const day = new Date(req.params.day);
-    const roomId = req.params.roomId;
-    const booking = await Booking.findOne({ roomId, day });
-    if (!booking) {
-      return res.send(["Morning", "Afternoon", "All-day"]);
+    try {
+      const day = new Date(req.params.day);
+      const roomId = req.params.roomId;
+      const booking = await Booking.findOne({ roomId, day });
+  
+      let availability = [];
+      if (!booking) {
+        availability = [
+          { slot: "Morning", booked: true },
+          { slot: "Afternoon", booked: true },
+          { slot: "All Day", booked: true },
+        ];
+      } else {
+        availability = [
+          { slot: "Morning", booked: booking.morningBooked },
+          { slot: "Afternoon", booked: booking.afternoonBooked },
+          { slot: "All Day", booked: booking.allDayBooked },
+        ];
+      }
+  
+      return res.send(availability);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).send("Internal Server Error");
     }
-
-    const falseSlots = [];
-    if (!booking.morningBooked) {
-      falseSlots.push("Morning");
-    }
-    if (!booking.afternoonBooked) {
-      falseSlots.push("Afternoon");
-    }
-    if (!booking.allDayBooked && !booking.afternoonBooked && !booking.morningBooked) {
-      falseSlots.push("All-day");
-    }
-
-    return res.send(falseSlots);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send("Internal Server Error");
-  }
-});
+  });
 
 module.exports = router;

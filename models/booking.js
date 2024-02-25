@@ -12,15 +12,15 @@ const bookingSchema = new mongoose.Schema({
     },
     morningBooked: {
         type: Boolean,
-        default: false
+        required: true 
       },
     afternoonBooked: {
         type: Boolean,
-        default: false
+        required: true 
       },
     allDayBooked: {
         type: Boolean,
-        default: false
+        required: true 
       },
 });
 
