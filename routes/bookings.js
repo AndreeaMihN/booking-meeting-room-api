@@ -6,6 +6,21 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const { Slot } = require("../utils/slot.const");
 
+router.get(`/`, async (req, res) => {
+  try {
+    const bookingList = await Booking.find()
+      .populate("roomId")
+      .populate("teamId");
+    if (!bookingList) {
+      return res.status(500).json({ success: false });
+    }
+    res.status(200).send(bookingList);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 router.post(`/`, async (req, res) => {
   const roomId = req.body.roomId;
   const teamId = req.body.teamId;
