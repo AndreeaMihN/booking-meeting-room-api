@@ -28,7 +28,6 @@ router.post(`/`, async (req, res) => {
     let room = new Room({
         name: req.body.name, 
         description: req.body.description, 
-        bookedSlots: req.body.bookedSlots, 
         capacity: req.body.capacity,
         office: req.body.office,
         floor: req.body.floor,
@@ -52,7 +51,6 @@ router.put('/:id', async (req, res) => {
         {
             name: req.body.name, 
             description: req.body.description, 
-            bookedSlots: req.body.bookedSlots, 
             capacity: req.body.capacity,
             office: req.body.office,
             floor: req.body.floor
@@ -76,32 +74,32 @@ router.delete('/:id', async (req, res) => {
     })
   });
   
-  router.get('/available-rooms', async (req, res) => {
-    const { start, end } = req.query;
+//   router.get('/available-rooms', async (req, res) => {
+//     const { start, end } = req.query;
 
-    if (!start || !end) {
-        return res.status(400).json({ success: false, message: 'Start and end parameters are required for the interval' });
-    }
+//     if (!start || !end) {
+//         return res.status(400).json({ success: false, message: 'Start and end parameters are required for the interval' });
+//     }
 
-    try {
-        const availableRooms = await Room.find({
-            bookedSlots: {
-                $not: {
-                    $elemMatch: {
-                        $or: [
-                            { $gte: new Date(start), $lt: new Date(end) },
-                            { $lt: new Date(start), $gte: new Date(end) }
-                        ]
-                    }
-                }
-            }
-        }).populate('office');
+//     try {
+//         const availableRooms = await Room.find({
+//             bookedSlots: {
+//                 $not: {
+//                     $elemMatch: {
+//                         $or: [
+//                             { $gte: new Date(start), $lt: new Date(end) },
+//                             { $lt: new Date(start), $gte: new Date(end) }
+//                         ]
+//                     }
+//                 }
+//             }
+//         }).populate('office');
 
-        res.status(200).json({ success: true, availableRooms });
-    } catch (error) {
-        console.error('Error while fetching available rooms:', error);
-        res.status(500).json({ success: false, error: 'Internal server error. Failed to fetch available rooms.' });
-    }
-});
+//         res.status(200).json({ success: true, availableRooms });
+//     } catch (error) {
+//         console.error('Error while fetching available rooms:', error);
+//         res.status(500).json({ success: false, error: 'Internal server error. Failed to fetch available rooms.' });
+//     }
+// });
 
 module.exports = router;

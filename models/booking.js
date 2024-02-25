@@ -6,16 +6,18 @@ const bookingSchema = new mongoose.Schema({
         ref: 'Room', 
         required: true 
     },
-    startTime: 
-    { 
-        type: Date, 
-        required: true 
-    },
-    endTime: 
-    { 
-        type: Date, 
-        required: true 
-    },
+    morningBooked: {
+        type: Boolean,
+        default: false
+      },
+    afternoonBooked: {
+        type: Boolean,
+        default: false
+      },
+    allDayBooked: {
+        type: Boolean,
+        default: false
+      },
 });
 
 exports.Booking = mongoose.model('Booking', bookingSchema);

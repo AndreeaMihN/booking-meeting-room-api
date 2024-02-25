@@ -14,19 +14,60 @@ router.get(`/`, async (req, res) => {
 
 router.post(`/`, async (req, res) => {
     const room = await Room.findById(req.body.roomId);
-    if(!room) return res.status(400).send('Invalid Room');
+    if (!room) return res.status(400).send('Invalid Room');
+
+    let existingBooking = await Booking.findOne({ roomId: req.body.roomId });
+    if (existingBooking) {
+        let isUpdateRequired = false;
+        let messages = [];
+
+        if (!existingBooking.morningBooked && req.body.morningBooked) {
+            existingBooking.morningBooked = true;
+            isUpdateRequired = true;
+        } else if (existingBooking.morningBooked) {
+            messages.push('morning');
+        }
+
+        if (!existingBooking.afternoonBooked && req.body.afternoonBooked) {
+            existingBooking.afternoonBooked = true;
+            isUpdateRequired = true;
+        } else if (existingBooking.afternoonBooked) {
+            messages.push('afternoon');
+        }
+
+        if (!existingBooking.allDayBooked && req.body.allDayBooked) {
+            existingBooking.allDayBooked = true;
+            isUpdateRequired = true;
+        } else if (existingBooking.allDayBooked) {
+            messages.push('all-day');
+        }
+
+        if (isUpdateRequired) {
+            existingBooking = await existingBooking.save();
+            return res.send(existingBooking);
+        }
+
+        if (messages.length > 0) {
+            const errorMessage = `The following slots are already booked: ${messages.join(', ')}`;
+            return res.status(400).send(errorMessage);
+        }
+
+        return res.status(400).send('No update required');
+    }
 
     let booking = new Booking({
-        roomId: req.body.roomId, 
-        startTime: req.body.startTime, 
-        endTime: req.body.endTime
-    })
+        roomId: req.body.roomId,
+        morningBooked: req.body.morningBooked,
+        afternoonBooked: req.body.afternoonBooked,
+        allDayBooked: req.body.allDayBooked,
+    });
     booking = await booking.save();
-    if(!booking)
-    return res.status(500).send('The booking cannot be created!');
+    if (!booking) return res.status(500).send('The booking cannot be created!');
 
     return res.send(booking);
 });
+
+
 
 router.put('/:id', async (req, res) => {
     if(!mongoose.isValidObjectId(req.params.id)){
@@ -39,8 +80,9 @@ router.put('/:id', async (req, res) => {
         req.params.id, 
         {
             roomId: req.body.roomId, 
-            startTime: req.body.startTime, 
-            endTime: req.body.endTime
+            morningBooked: req.body.morningBooked,
+            afternoonBooked: req.body.afternoonBooked,
+            allDayBooked: req.body.allDayBooked,
         },
         {
             new: true
@@ -50,38 +92,28 @@ router.put('/:id', async (req, res) => {
     return res.send(booking);
 });
 
-//implement a better solution for this route!!
-router.get('/is-interval-free', async (req, res) => {
-    let { start, end } = req.query;
-
-    if (!start || !end) {
-        return res.status(400).json({ success: false, message: 'Start and end parameters are required for the interval' });
-    }
-
+router.get('/:roomId', async (req, res) => {
     try {
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            return res.status(400).json({ success: false, message: 'Invalid date format. Please provide dates in ISO 8601 format.' });
+        const booking = await Booking.findOne({ roomId: req.params.roomId });
+        if (!booking) {
+            return res.send(['morning', 'afternoon', 'all-day']);
         }
 
-        start = startDate.toISOString();
-        end = endDate.toISOString();
-
-        const overlappingBookings = await Booking.find({
-            startTime: { $lt: end },
-            endTime: { $gt: start }
-        });
-
-        if (overlappingBookings.length === 0) {
-            res.status(200).json({ success: true, message: 'Interval is free' });
-        } else {
-            res.status(200).json({ success: true, message: 'Interval is not free, there are bookings in this interval' });
+        const falseSlots = [];
+        if (!booking.morningBooked) {
+            falseSlots.push('morning');
         }
+        if (!booking.afternoonBooked) {
+            falseSlots.push('afternoon');
+        }
+        if (!booking.allDayBooked) {
+            falseSlots.push('all-day');
+        }
+
+        return res.send(falseSlots);
     } catch (error) {
-        console.error('Error while checking interval:', error);
-        res.status(500).json({ success: false, error: 'Internal server error. Failed to check interval.' });
+        console.error(error);
+        return res.status(500).send('Internal Server Error');
     }
 });
 
