@@ -6,6 +6,11 @@ const bookingSchema = new mongoose.Schema({
         ref: 'Room', 
         required: true 
     },
+    teamId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Team', 
+        required: true 
+    },
     day: {
         type: Date,
         required: true 

@@ -21,6 +21,7 @@ const officesRouter = require('./routes/offices');
 const roomsRouter = require('./routes/rooms');
 const usersRouter = require('./routes/users');
 const bookingsRouter = require('./routes/bookings');
+const teamsRouter = require('./routes/teams');
 
 const api = process.env.API_URL;
 
@@ -28,6 +29,7 @@ app.use(`${api}/rooms`, roomsRouter);
 app.use(`${api}/users`, usersRouter);
 app.use(`${api}/offices`, officesRouter);
 app.use(`${api}/bookings`, bookingsRouter);
+app.use(`${api}/teams`, teamsRouter);
 
 //Database
 mongoose.connect(process.env.CONNECTION_STRING)

@@ -1,5 +1,6 @@
 const { Booking } = require("../models/booking");
 const { Room } = require("../models/room");
+const { Team } = require("../models/team");
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
@@ -16,14 +17,16 @@ router.post(`/`, async (req, res) => {
   const room = await Room.findById(req.body.roomId);
   if (!room) return res.status(400).send("Invalid Room");
 
+  const team = await Team.findById(req.body.teamId);
+  if (!team) return res.status(400).send("Invalid Team");
+
   if (!req.body.day) {
     return res.status(400).send("Please provide a valid booking day");
   }
 
-  let existingBooking = await Booking.findOne({ roomId: req.body.roomId });
+  let existingBooking = await Booking.findOne({ roomId: req.body.roomId, teamId: req.body.teamId });
 
   if (existingBooking) {
-    console.log(existingBooking)
     existingBooking.morningBooked = req.body.morningBooked;
     existingBooking.afternoonBooked = req.body.afternoonBooked;
     existingBooking.allDayBooked = req.body.morningBooked || req.body.afternoonBooked || req.body.allDayBooked;
@@ -33,6 +36,7 @@ router.post(`/`, async (req, res) => {
 
   let booking = new Booking({
     roomId: req.body.roomId,
+    teamId: req.body.teamId,
     day: req.body.day,
     morningBooked: req.body.morningBooked,
     afternoonBooked: req.body.afternoonBooked,
@@ -52,10 +56,14 @@ router.put("/:id", async (req, res) => {
   const room = await Room.findById(req.body.roomId);
   if (!room) return res.status(400).send("Invalid Room");
 
+  const team = await Team.findById(req.body.teamId);
+  if (!team) return res.status(400).send("Invalid Team");
+
   let booking = await Booking.findByIdAndUpdate(
     req.params.id,
     {
       roomId: req.body.roomId,
+      teamId: req.body.teamId,
       day: req.body.day,
       morningBooked: req.body.morningBooked,
       afternoonBooked: req.body.afternoonBooked,
