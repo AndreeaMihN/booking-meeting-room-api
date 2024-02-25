@@ -6,6 +6,10 @@ const bookingSchema = new mongoose.Schema({
         ref: 'Room', 
         required: true 
     },
+    day: {
+        type: Date,
+        required: true 
+    },
     morningBooked: {
         type: Boolean,
         default: false

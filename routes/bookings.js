@@ -3,6 +3,7 @@ const { Room } = require('../models/room');
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 router.get(`/`, async (req, res) => {
   const bookingList = await Booking.find();
@@ -15,6 +16,11 @@ router.get(`/`, async (req, res) => {
 router.post(`/`, async (req, res) => {
     const room = await Room.findById(req.body.roomId);
     if (!room) return res.status(400).send('Invalid Room');
+
+    // Check if 'day' field is set
+    if (!req.body.day) {
+        return res.status(400).send('Please provide a valid booking day');
+    }
 
     let existingBooking = await Booking.findOne({ roomId: req.body.roomId });
     if (existingBooking) {
@@ -57,6 +63,7 @@ router.post(`/`, async (req, res) => {
 
     let booking = new Booking({
         roomId: req.body.roomId,
+        day: req.body.day,
         morningBooked: req.body.morningBooked,
         afternoonBooked: req.body.afternoonBooked,
         allDayBooked: req.body.allDayBooked,
@@ -66,7 +73,6 @@ router.post(`/`, async (req, res) => {
 
     return res.send(booking);
 });
-
 
 
 router.put('/:id', async (req, res) => {
@@ -80,6 +86,7 @@ router.put('/:id', async (req, res) => {
         req.params.id, 
         {
             roomId: req.body.roomId, 
+            day: req.body.day,
             morningBooked: req.body.morningBooked,
             afternoonBooked: req.body.afternoonBooked,
             allDayBooked: req.body.allDayBooked,
@@ -92,9 +99,10 @@ router.put('/:id', async (req, res) => {
     return res.send(booking);
 });
 
-router.get('/:roomId', async (req, res) => {
+router.get('/:roomId/:day', async (req, res) => {
     try {
-        const booking = await Booking.findOne({ roomId: req.params.roomId });
+        const day = moment.utc(req.params.day + 'T00:00:00Z').toDate();
+        const booking = await Booking.findOne({ roomId: req.params.roomId, day });
         if (!booking) {
             return res.send(['morning', 'afternoon', 'all-day']);
         }
@@ -116,5 +124,6 @@ router.get('/:roomId', async (req, res) => {
         return res.status(500).send('Internal Server Error');
     }
 });
+
 
 module.exports = router;
