@@ -29,12 +29,18 @@ router.post(`/`, async (req, res) => {
   const afternoonBooked = req.body.afternoonBooked;
   const allDayBooked = req.body.allDayBooked;
 
-  const existingBooking = await Booking.findOne({ roomId, day });
+  const existingBookingSameSlot = await Booking.findOne({ roomId, day, morningBooked, afternoonBooked, allDayBooked });
+
+  if (existingBookingSameSlot) {
+    return res.status(400).json({ success: false, error: 'This slot is already booked by another team' });
+  }
+
+  const existingBooking = await Booking.findOne({ roomId, day, teamId });
 
   if (!morningBooked && !afternoonBooked && !allDayBooked) {
     if (existingBooking) {
       await Booking.findByIdAndDelete(existingBooking._id);
-      return res.send("Booking removed successfully");
+      return res.status(400).json({ success: false, error: 'Booking removed successfully' });
     } else {
       return res.status(400).send("No slots booked");
     }
@@ -110,9 +116,9 @@ router.get("/:roomId/:day/:teamId", async (req, res) => {
     let availability = [];
     if (!booking) {
       availability = [
-        { slot: Slot.Morning, booked: true },
-        { slot: Slot.Afternoon, booked: true },
-        { slot: Slot.AllDay, booked: true },
+        { slot: Slot.Morning, booked: false },
+        { slot: Slot.Afternoon, booked: false },
+        { slot: Slot.AllDay, booked: false },
       ];
     } else {
       availability = [
