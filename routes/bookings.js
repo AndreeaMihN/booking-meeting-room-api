@@ -14,6 +14,7 @@ router.get(`/`, async (req, res) => {
     if (!bookingList) {
       return res.status(500).json({ success: false });
     }
+    bookingList= bookingList.p
     res.status(200).send(bookingList);
   } catch (error) {
     console.error(error);

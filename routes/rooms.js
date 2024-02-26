@@ -13,10 +13,11 @@ router.get(`/`, async (req, res) =>{
 });
 
 router.get('/:id', async (req, res) => {
-    const room = await Room.findById(req.params.id).populate('office');
+    const room = await Room.findById(req.params.id)
     if (!room) {
       return res.status(500).json({ message: 'The room with the given ID was not found.' });
     }
+    await room.populate('office');
     res.status(200).send(room);
   });
   
@@ -37,7 +38,7 @@ router.post(`/`, async (req, res) => {
     if(!room)
     return res.status(500).send('The room cannot be created!');
 
-    return res.send(room);
+    return res.status(200).send(room);
 });
 
 router.put('/:id', async (req, res) => {
@@ -62,7 +63,7 @@ router.put('/:id', async (req, res) => {
         });
 
     if(!room) return res.status(500).send('The product cannot be updated');
-    return res.send(room);
+    return res.status(200).send(room);
 });
 
 router.delete('/:id', async (req, res) => {
