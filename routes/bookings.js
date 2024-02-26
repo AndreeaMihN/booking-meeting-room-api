@@ -24,23 +24,20 @@ router.get(`/`, async (req, res) => {
 router.post(`/`, async (req, res) => {
   const roomId = req.body.roomId;
   const teamId = req.body.teamId;
+  const day = req.body.day;
+  const morningBooked = req.body.morningBooked;
+  const afternoonBooked = req.body.afternoonBooked;
+  const allDayBooked = req.body.allDayBooked;
 
-  const existingBooking = await Booking.findOne({
-    roomId,
-    $and: [
-      { teamId: { $ne: teamId } },
-      {
-        $or: [
-          { morningBooked: true },
-          { afternoonBooked: true },
-          { allDayBooked: true },
-        ],
-      },
-    ],
-  });
+  const existingBooking = await Booking.findOne({ roomId, day });
 
-  if (existingBooking) {
-    return res.status(400).send("Slot already booked for another team");
+  if (!morningBooked && !afternoonBooked && !allDayBooked) {
+    if (existingBooking) {
+      await Booking.findByIdAndDelete(existingBooking._id);
+      return res.send("Booking removed successfully");
+    } else {
+      return res.status(400).send("No slots booked");
+    }
   }
 
   const room = await Room.findById(roomId);
@@ -49,37 +46,30 @@ router.post(`/`, async (req, res) => {
   const team = await Team.findById(teamId);
   if (!team) return res.status(400).send("Invalid Team");
 
-  if (!req.body.day) {
-    return res.status(400).send("Please provide a valid booking day");
-  }
+  let booking;
 
-  let booking = await Booking.findOne({ roomId, teamId, day: req.body.day });
-
-  if (booking) {
-    booking.morningBooked = req.body.morningBooked;
-    booking.afternoonBooked = req.body.afternoonBooked;
-    booking.allDayBooked =
-      req.body.morningBooked ||
-      req.body.afternoonBooked ||
-      req.body.allDayBooked;
-    booking = await booking.save();
-    return res.send(booking);
+  if (existingBooking) {
+    booking = existingBooking;
+    booking.morningBooked = morningBooked;
+    booking.afternoonBooked = afternoonBooked;
+    booking.allDayBooked = allDayBooked;
   } else {
     booking = new Booking({
       roomId,
       teamId,
-      day: req.body.day,
-      morningBooked: req.body.morningBooked,
-      afternoonBooked: req.body.afternoonBooked,
-      allDayBooked: !req.body.morningBooked || !req.body.morningBooked,
+      day,
+      morningBooked,
+      afternoonBooked,
+      allDayBooked,
     });
-
-    booking = await booking.save();
-    if (!booking) return res.status(500).send("The booking cannot be created!");
-
-    return res.send(booking);
   }
+
+  booking = await booking.save();
+  if (!booking) return res.status(500).send("The booking cannot be created!");
+
+  return res.send(booking);
 });
+
 
 router.put("/:id", async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
